@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Function Hall Booking</title>
+<style>
+:root{--bg:#f6f3ee;--card:#fffdf9;--ink:#1f2a2e;--mute:#6b7478;--line:#e0dbd2;--acc:#1f5f5b;--acc2:#b8893b;--bad:#a63d2f;--busy:#e9d9d6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161b1c;--card:#1f2627;--ink:#ece8df;--mute:#9aa4a7;--line:#33403f;--acc:#5fb3ab;--acc2:#d4a955;--bad:#e07a6a;--busy:#4a2f2b}}
+:root[data-theme="dark"]{--bg:#161b1c;--card:#1f2627;--ink:#ece8df;--mute:#9aa4a7;--line:#33403f;--acc:#5fb3ab;--acc2:#d4a955;--bad:#e07a6a;--busy:#4a2f2b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,'Times New Roman',serif}
+h1,h2,h3,button,label,input,select,textarea{font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.7rem;margin:8px 0 2px;letter-spacing:-.01em}
+.sub{color:var(--mute);margin:0 0 18px}
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tabs button{flex:1;padding:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;font-size:.95rem;cursor:pointer}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.halls{display:grid;gap:10px;margin-bottom:16px}
+.hall{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:14px;cursor:pointer;text-align:left;color:var(--ink);width:100%}
+.hall.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+.hall b{font:600 1.05rem system-ui,sans-serif}
+.hall span{display:block;color:var(--mute);font-size:.9rem}
+.price{color:var(--acc2);font-weight:600}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.cal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cal-h button{border:1px solid var(--line);background:none;color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:1rem}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.grid .dw{font:.75rem system-ui;color:var(--mute);padding:4px 0}
+.d{aspect-ratio:1;border:1px solid var(--line);background:none;border-radius:6px;color:var(--ink);font:.9rem system-ui;cursor:pointer;padding:0}
+.d:disabled{opacity:.35;cursor:not-allowed}
+.d.busy{background:var(--busy);text-decoration:line-through}
+.d.sel{background:var(--acc);color:#fff;border-color:var(--acc)}
+.legend{font:.8rem system-ui;color:var(--mute);margin-top:8px}
+label{display:block;font:600 .85rem system-ui;margin:12px 0 4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:1rem}
+:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.total{display:flex;justify-content:space-between;font:600 1.1rem system-ui;margin:16px 0 10px;padding-top:12px;border-top:1px solid var(--line)}
+.go{width:100%;padding:13px;border:0;border-radius:8px;background:var(--acc);color:#fff;font:600 1rem system-ui;cursor:pointer}
+.go:disabled{opacity:.5}
+.err{color:var(--bad);font:.9rem system-ui;margin-top:8px;min-height:1.2em}
+.bk{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:14px;margin-bottom:10px}
+.bk h3{margin:0 0 4px;font-size:1rem}
+.bk p{margin:2px 0;color:var(--mute);font:.9rem system-ui}
+.bk .x{margin-top:8px;border:1px solid var(--bad);color:var(--bad);background:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:.85rem}
+.ok{background:var(--acc);color:#fff;padding:12px 14px;border-radius:8px;font:.95rem system-ui;margin-bottom:14px}
+.empty{color:var(--mute);text-align:center;padding:28px 0;font-family:system-ui}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Book a function hall</h1>
+<p class="sub">Pick a hall, choose a free date, and confirm your booking.</p>
+<div class="tabs"><button id="t1" class="on">New booking</button><button id="t2">My bookings</button></div>
+<div id="ok" class="ok" hidden></div>
+
+<section id="v1">
+<div class="halls" id="halls"></div>
+<div class="panel">
+<div class="cal-h"><button id="prev" aria-label="Previous month">‹</button><b id="mon"></b><button id="next" aria-label="Next month">›</button></div>
+<div class="grid" id="cal"></div>
+<div class="legend">Struck-through dates are already booked.</div>
+</div>
+<div class="panel">
+<div class="row">
+<div><label for="ev">Event type</label><select id="ev"><option>Wedding</option><option>Birthday</option><option>Corporate event</option><option>Engagement</option><option>Other</option></select></div>
+<div><label for="gu">Guests</label><input id="gu" type="number" min="1" value="100"></div>
+</div>
+<label for="nm">Your name</label><input id="nm" autocomplete="name">
+<div class="row">
+<div><label for="ph">Phone</label><input id="ph" type="tel" autocomplete="tel"></div>
+<div><label for="em">Email</label><input id="em" type="email" autocomplete="email"></div>
+</div>
+<label for="sl">Time slot</label>
+<select id="sl"><option value="Morning (8am–2pm)">Morning (8am–2pm)</option><option value="Evening (5pm–11pm)">Evening (5pm–11pm)</option></select>
+<label for="ct">Catering (per guest)</label>
+<select id="ct"><option value="0">No catering</option><option value="12">Standard buffet – 12</option><option value="22">Premium buffet – 22</option></select>
+<div class="total"><span>Estimated total</span><span id="tot"></span></div>
+</div>
+<div class="panel">
+<h2 style="margin:0 0 4px;font-size:1.15rem">Payment</h2>
+<div class="row">
+<div><label for="po">Pay</label><select id="po"><option value="dep">30% deposit</option><option value="full">Full amount</option></select></div>
+<div><label for="pm">Method</label><select id="pm"><option value="online">Pay online</option><option value="bank">Bank transfer</option><option value="venue">Pay at venue</option></select></div>
+</div>
+<div id="bn" class="legend" hidden>Bank details appear after you confirm. The date is held for 48 hours.</div>
+<div class="total"><span>Due now</span><span id="due"></span></div>
+<button class="go" id="go">Confirm booking</button>
+<div class="err" id="err" role="alert"></div>
+<div class="legend">Online payments open a secure checkout. Card details never touch this site.</div>
+</div>
+</section>
+<section id="v2" hidden><div id="list"></div></section>
+</main>
+<script>
+var CFG={provider:'stripe',currency:'USD'},AV=[],mine=[],REFS=[];
+try{REFS=JSON.parse(localStorage.getItem('hallRefs')||'[]')}catch(e){}
+var $=function(i){return document.getElementById(i)};
+var HALLS=[
+{id:'grand',name:'Grand Ballroom',cap:400,price:2500,d:'Chandeliers, stage, and dance floor'},
+{id:'garden',name:'Garden Pavilion',cap:200,price:1400,d:'Open-air lawn with covered dining area'},
+{id:'lounge',name:'Executive Lounge',cap:80,price:700,d:'Projector, sound system, and lounge seating'}];
+var hall=HALLS[0],sel=null,TOT=0,cur=new Date();cur.setDate(1);cur.setHours(0,0,0,0);
+function money(n){try{return new Intl.NumberFormat(undefined,{style:'currency',currency:CFG.currency,maximumFractionDigits:0}).format(n)}catch(e){return n}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function api(u,body){return fetch(u,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||'Request failed');return d})})}
+function msg(t){$('ok').hidden=false;$('ok').textContent=t;scrollTo(0,0)}
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function taken(date,slot){return AV.some(function(b){return b.hall===hall.id&&b.date===date&&b.slot===slot})}
+function fullyBusy(date){var o=$('sl').options;return taken(date,o[0].value)&&taken(date,o[1].value)}
+function refresh(){return api('/api/availability').then(function(d){AV=d;drawCal()}).catch(function(){})}
+function loadMine(){if(!REFS.length)return;api('/api/lookup',{refs:REFS}).then(function(d){mine=d;if(!$('v2').hidden)drawList()}).catch(function(){})}
+function drawHalls(){
+$('halls').innerHTML=HALLS.map(function(h){return '<button class="hall'+(h.id===hall.id?' on':'')+'" data-id="'+h.id+'"><b>'+h.name+'</b><span>'+h.d+' · up to '+h.cap+' guests</span><span class="price">'+money(h.price)+' / slot</span></button>'}).join('');
+Array.prototype.forEach.call(document.querySelectorAll('.hall'),function(b){b.onclick=function(){hall=HALLS.filter(function(h){return h.id===b.dataset.id})[0];sel=null;drawHalls();drawCal();total()}});
+}
+function drawCal(){
+$('mon').textContent=cur.toLocaleString('en',{month:'long',year:'numeric'});
+var h='',today=new Date();today.setHours(0,0,0,0);
+['S','M','T','W','T','F','S'].forEach(function(d){h+='<div class="dw">'+d+'</div>'});
+for(var i=0;i<cur.getDay();i++)h+='<div></div>';
+var n=new Date(cur.getFullYear(),cur.getMonth()+1,0).getDate();
+for(var d=1;d<=n;d++){
+var dt=new Date(cur.getFullYear(),cur.getMonth(),d),k=iso(dt),busy=fullyBusy(k);
+h+='<button class="d'+(busy?' busy':'')+(k===sel?' sel':'')+'" data-k="'+k+'"'+((dt<today||busy)?' disabled':'')+'>'+d+'</button>';
+}
+$('cal').innerHTML=h;
+Array.prototype.forEach.call(document.querySelectorAll('.d'),function(b){b.onclick=function(){sel=b.dataset.k;drawCal()}});
+}
+function due(){return $('pm').value==='venue'?0:($('po').value==='full'?TOT:Math.round(TOT*0.3))}
+function total(){
+TOT=hall.price+(+$('gu').value||0)*(+$('ct').value);
+$('tot').textContent=money(TOT);$('due').textContent=money(due());
+$('bn').hidden=$('pm').value!=='bank';
+$('go').textContent=$('pm').value==='online'?'Pay '+money(due())+' & confirm':'Confirm booking';
+}
+function loadRzp(){return new Promise(function(ok,no){if(window.Razorpay)return ok();var s=document.createElement('script');s.src='https://checkout.razorpay.com/v1/checkout.js';s.onload=ok;s.onerror=function(){no(new Error('Could not load Razorpay'))};document.head.appendChild(s)})}
+function startPay(ref){
+if(CFG.provider==='stripe')return api('/api/pay/'+ref+'/stripe',{}).then(function(d){location.href=d.url});
+return api('/api/pay/'+ref+'/razorpay',{}).then(function(o){return loadRzp().then(function(){
+new Razorpay({key:o.keyId,order_id:o.orderId,amount:o.amount,currency:o.currency,name:'Function Hall Booking',
+prefill:{name:o.name,email:o.email,contact:o.phone},
+handler:function(r){api('/api/pay/'+ref+'/razorpay/verify',r).then(function(){msg('Payment received. Booking '+ref+' is confirmed.');loadMine()}).catch(function(e){msg('Payment check failed: '+e.message)})}}).open()})});
+}
+function submit(){
+var g=+$('gu').value,e='';
+if(!sel)e='Choose an available date.';
+else if(!$('nm').value.trim())e='Enter your name.';
+else if(!/^[+\d][\d\s\-]{6,}$/.test($('ph').value.trim()))e='Enter a valid phone number.';
+else if(!/^\S+@\S+\.\S+$/.test($('em').value.trim()))e='Enter a valid email address.';
+else if(!g||g<1)e='Enter the number of guests.';
+else if(g>hall.cap)e=hall.name+' holds up to '+hall.cap+' guests.';
+$('err').textContent=e;if(e)return;
+$('go').disabled=true;
+api('/api/bookings',{hall:hall.id,date:sel,slot:$('sl').value,ev:$('ev').value,guests:g,name:$('nm').value,phone:$('ph').value,email:$('em').value,catering:$('ct').selectedIndex,plan:$('po').value,method:$('pm').value})
+.then(function(b){
+REFS.push(b.ref);try{localStorage.setItem('hallRefs',JSON.stringify(REFS))}catch(x){}
+sel=null;
+if(b.method==='online')return startPay(b.ref);
+msg('Booked. Ref '+b.ref+'.'+(b.method==='bank'?' Transfer '+money(b.payNow)+' within 48 hours using reference '+b.ref+'. '+b.bank:' Pay at the venue.'));
+})
+.catch(function(x){$('err').textContent=x.message})
+.then(function(){$('go').disabled=false;refresh();loadMine()});
+}
+var LBL={confirmed:'Confirmed',pending:'Awaiting payment',expired:'Hold expired'};
+function drawList(){
+if(!mine.length){$('list').innerHTML='<div class="empty">No bookings yet on this device.</div>';return}
+$('list').innerHTML=mine.slice().sort(function(a,b){return a.date<b.date?-1:1}).map(function(b){
+var st=b.status==='confirmed'&&b.paid>=b.total?'Paid in full':b.status==='confirmed'&&b.paid>0?'Deposit paid':b.status==='confirmed'&&b.method==='venue'?'Pay at venue':LBL[b.status]||b.status;
+var can=b.method==='online'&&b.status!=='expired'&&b.due>0;
+return '<div class="bk"><h3>'+esc(b.hallName)+'</h3><p>'+esc(b.date)+' · '+esc(b.slot)+'</p><p>'+esc(b.ev)+' · '+b.guests+' guests · Total '+money(b.total)+'</p><p><b>'+st+'</b> · Paid '+money(b.paid)+'</p><p>Ref '+esc(b.ref)+'</p>'+(can?'<button class="x pb" data-ref="'+esc(b.ref)+'" style="border-color:var(--acc);color:var(--acc)">Pay '+money(b.due)+'</button>':'')+'</div>'}).join('');
+Array.prototype.forEach.call(document.querySelectorAll('.pb'),function(x){x.onclick=function(){startPay(x.dataset.ref).catch(function(e){msg('Payment failed: '+e.message)})}});
+}
+function tab(n){$('v1').hidden=n!==1;$('v2').hidden=n!==2;$('t1').className=n===1?'on':'';$('t2').className=n===2?'on':'';if(n===2){loadMine();drawList()}else drawCal()}
+$('t1').onclick=function(){tab(1)};$('t2').onclick=function(){tab(2)};
+$('prev').onclick=function(){cur.setMonth(cur.getMonth()-1);drawCal()};
+$('next').onclick=function(){cur.setMonth(cur.getMonth()+1);drawCal()};
+$('gu').oninput=total;$('ct').onchange=total;$('po').onchange=total;$('pm').onchange=total;
+$('sl').onchange=drawCal;$('go').onclick=submit;
+api('/api/config').then(function(c){CFG=c}).catch(function(){}).then(function(){
+drawHalls();total();refresh();loadMine();
+var p=new URLSearchParams(location.search);
+if(p.get('paid')){msg('Payment received for '+p.get('paid')+'. Your booking will show as confirmed in a moment.');tab(2);setTimeout(loadMine,2500);setTimeout(loadMine,7000)}
+else if(p.get('cancelled')){msg('Payment cancelled. Your date is held for 30 minutes. Pay from My bookings.');tab(2)}
+history.replaceState(null,'',location.pathname);
+});
+drawHalls();drawCal();
+</script>
+</body>
+</html>
